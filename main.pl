@@ -4,13 +4,15 @@ Yean Shu, Jason Ueng, Daniel Hou
 */
 :- use_module(library(random)).
 :- dynamic player_stats/5.
+:- discontiguous describe/1.
 :- retractall(player_stats(_,_,_,_,_)).
 
-player_stats(FIGHT,MONEY,CHA,INT,STA).
+% F = fight, M = money, C = cha, I = int, S = stam
+player_stats(F,M,C,I,S).
         
 sword :- 
         write('You study the blade *SCHWING'), nl,
-        random_between(0,1,SIGN), random_between(0,10,MAG), change_stats(0, SIGN, MAG). % change later
+        random_between(0,1,SIGN), random_between(1,10,MAG), change_stats(0, SIGN, MAG). % change later
 book :- 
         write('You read the Art of Wario'), nl,
         random_between(0,1,SIGN), random(MAG), change_stats(1, SIGN, MAG).
@@ -44,17 +46,26 @@ change_stats(ACTION, SIGN, MAG) :-
         getPlayerStats(F,M,C,I,S),
         ACTION is 0,
         SIGN is 0,
-        %retract(player_stats(F,M,C,I,S)), % check
+        retract(player_stats(F,M,C,I,S)), % check
         assert(player_stats(F1,M,C,I,S1)),
+        getPlayerStats(F,M,C,I,S),
+        number_string(F1,Fstr),
+        number_string(M,Mstr),
+        number_string(C,Cstr),
+        number_string(I,Istr),
+        number_string(S1,Sstr),
+        write('Your Strength is: '), write(Fstr), nl,
+        write('Your Intelligence is: '), write(Istr), nl,
+        write('Your Charisma is: '), write(Cstr), nl,
+        write('Your Wealth is: '),  write(Mstr),nl,
+        write('Your Stamina is: '), write(Sstr), nl,
         F1 is F-MAG,
-        number_string(F1,F1str),
-        write(F1str),
         S1 is S-1.
 change_stats(ACTION, SIGN, MAG) :-
         getPlayerStats(F,M,C,I,S),
         ACTION is 0,
         SIGN is 1,
-        %retract(player_stats(F,M,C,I,S)), % check
+        retract(player_stats(F,M,C,I,S)), % check
         assert(player_stats(F1,M,C,I,S1)),
         F1 is F+MAG,
         S1 is S-1.
@@ -63,7 +74,7 @@ change_stats(ACTION, SIGN, MAG) :-
 
 start :-
     retract(player_stats(F,M,C,I,S)),
-    assert(player_stats(0,0,0,0,10)),
+    assert(player_stats(10,10,10,10,10)),
     instructions.
 
 instructions :-
