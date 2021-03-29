@@ -44,32 +44,12 @@ getPlayerStats(F,M,C,I,S) :-
 % sign 0 = neg, sign 1 = pos
 change_stats(ACTION, SIGN, MAG) :-
         getPlayerStats(F,M,C,I,S),
-        ACTION is 0,
-        SIGN is 0,
-        retract(player_stats(F,M,C,I,S)), % check
-        assert(player_stats(F1,M,C,I,S1)),
-        getPlayerStats(F,M,C,I,S),
-        number_string(F1,Fstr),
-        number_string(M,Mstr),
-        number_string(C,Cstr),
-        number_string(I,Istr),
-        number_string(S1,Sstr),
-        write('Your Strength is: '), write(Fstr), nl,
-        write('Your Intelligence is: '), write(Istr), nl,
-        write('Your Charisma is: '), write(Cstr), nl,
-        write('Your Wealth is: '),  write(Mstr),nl,
-        write('Your Stamina is: '), write(Sstr), nl,
-        F1 is F-MAG,
-        S1 is S-1.
-change_stats(ACTION, SIGN, MAG) :-
-        getPlayerStats(F,M,C,I,S),
-        ACTION is 0,
-        SIGN is 1,
-        retract(player_stats(F,M,C,I,S)), % check
-        assert(player_stats(F1,M,C,I,S1)),
-        F1 is F+MAG,
-        S1 is S-1.
-
+        retract(player_stats(F,M,C,I,S)),
+        S1 is S-1,
+        (       ACTION =:= 0, SIGN =:= 0 -> F1 is F-MAG
+        ;       ACTION =:= 0, SIGN =:= 1 -> F1 is F+MAG
+        ),
+        assert(player_stats(F1,M,C,I,S1)).
 
 
 start :-
