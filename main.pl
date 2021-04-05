@@ -9,7 +9,10 @@ Yean Shu, Jason Ueng, Daniel Hou
 
 % F = fight, M = money, C = cha, I = int, S = stam, D = current day
 player_stats(F,M,C,I,S,D).
-        
+
+% List of possible tasks you can do every day
+% Generates a random increase for their respective stats, then checks for a random event at the end of the day
+% If rest is called, then increase stamina and move directly to next day without calling random event      
 sword :- 
         write('You spend the day practicing your swordplay in the field.'), nl,
         mag_generator(MAG), change_stats(0, MAG), random_event.
@@ -26,6 +29,7 @@ rest :-
         write('You decide to take a nap'), nl,
         change_stats(4,_), new_day.
 
+% Displays all of your current stats
 stat :-
         getPlayerStats(F,M,C,I,S,_),
         number_string(F,Fstr),
@@ -39,10 +43,13 @@ stat :-
         write('Your Intelligence is: '), write(Istr), nl,
         write('Your Stamina is: '), write(Sstr), nl.
 
+% Helper function used to retrieve stats
 getPlayerStats(F,M,C,I,S,D) :- 
         player_stats(F,M,C,I,S,D).
 
 % sword = 0, book = 1, work = 2, talk = 3, rest = 4
+% Depending on the action selected, increase respective stats by MAG and decrease stamina by 1
+% If rest is selected, increase stamina by 2
 change_stats(ACTION, MAG) :-
         getPlayerStats(F,M,C,I,S,D),
         retract(player_stats(F,M,C,I,S,D)),
@@ -61,7 +68,7 @@ change_stats(ACTION, MAG) :-
         ;       ACTION =:= 5 -> assert(player_stats(F1,M1,C1,I1,S1,D))
         ).
 
-
+% Randomly determines the increase in stats obtained during daily tasks
 mag_generator(RES) :-
         random(MAG),
         (       MAG >= 0, MAG < 0.2 -> RES is 0
@@ -70,7 +77,9 @@ mag_generator(RES) :-
         ;       MAG >= 0.9, MAG < 1 -> RES is 3    
         ).
 
-
+% Randomly determines if we have a random event
+% If we have a random event, change their repective stats and move to a new day
+% Otherwise move directly to a new day
 random_event :-
         random(TRIGGER),
         (       TRIGGER >= 0.99, TRIGGER < 1 -> describe(heart_attack) % event: death
@@ -80,6 +89,8 @@ random_event :-
         ;       TRIGGER >= 0, TRIGGER < 0.9 -> new_day % nothing happens
         ).
 
+% Moves the day forward by one
+% if stamina =< 0, or the following day is 30, move to one of the endings
 new_day :-
         getPlayerStats(F,M,C,I,S,D),
         retract(player_stats(F,M,C,I,S,D)),
@@ -87,10 +98,11 @@ new_day :-
         assert(player_stats(F,M,C,I,S,D1)),
         number_string(D1,Dstr),
         (       S =< 0 -> describe(sta_heart_attack)
-        ;       D1 >= 5 -> end_branch
+        ;       D1 >= 30 -> end_branch
         ;       write('It is now day '), write(Dstr), nl
         ).
 
+% Determines which ending is visited based on player stats
 end_branch :-
         getPlayerStats(F,M,C,I,_,_),
         (       F >= 30 -> describe(str_end) 
@@ -100,11 +112,14 @@ end_branch :-
         ;       describe(fail_end) 
         ).
 
+% Starts the game
+% Initializes the player at day 1 with all stats at 10.
 start :-
         retract(player_stats(F,M,C,I,S,D)),
         assert(player_stats(10,10,10,10,10,1)),
         instructions.
 
+% Displays all of the information for the game
 instructions :-
     nl,
     write('You are Jonathan, the newest member of the village guild. A dragon comes to the village once a month and demands gold. Every time, the village is forced to surrender. This time, you are determined to stop it.'), nl,
@@ -121,12 +136,12 @@ instructions :-
     write('Die Dragon! You dont belong in this world!'), nl,
     nl.
 
-% Meta
+% Game over description
 describe(game_over) :-
         write('Game Over'), nl,nl,
         write('type start. to try again?'), nl.
 
-% List of Random Events
+% Descriptions of random events
 describe(inc_all) :- 
         nl,
         write('Random event! You suddenly hear a voice from the heavens as God descends from the heavens and gives you a holy blessing. You feel the power coursing through your veins as bask in the glow of the almighty one. He even rains some gold on you as a small bonus. You gain +4 to all your stats'),
@@ -143,7 +158,7 @@ describe(drop_your_wallet) :-
         nl.
 
 
-% List of Endings
+% Descriptions of possible endings and the game over text
 describe(str_end) :-
         nl,
         write('The day is finally here. The wind is blowing as you hear the flap of the dragon\'s leathery wings. You use an omega-slash and sunder the dragon in twain. The crowd cheers as you dab over the dragon\'s corpse. You saved the village and return a hero!'), nl,
