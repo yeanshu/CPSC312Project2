@@ -4,27 +4,27 @@ Yean Shu, Jason Ueng, Daniel Hou
 */
 :- use_module(library(random)).
 :- dynamic player_stats/6.
-:- discontiguous describe/1.
+:- discontiguous describe/1, new_day/0, mag_generator/1.
 :- retractall(player_stats(_,_,_,_,_,_)).
 
 % F = fight, M = money, C = cha, I = int, S = stam, D = current day
 player_stats(F,M,C,I,S,D).
         
 sword :- 
-        write('You study the blade *SCHWING'), nl,
-        random_between(0,1,SIGN), mag_generator(MAG), change_stats(0, SIGN, MAG), random_event.
+        write('You spend the day practicing your swordplay in the field.'), nl,
+        mag_generator(MAG), change_stats(0, MAG), random_event.
 work :- 
-        write('You work parttime at the local WcBonalds'), nl,
-        random_between(0,1,SIGN), mag_generator(MAG), change_stats(1, SIGN, MAG), random_event.
+        write('You work parttime at the local tavern and earn some gold.'), nl,
+        mag_generator(MAG), change_stats(1, MAG), random_event.
 talk :- 
         write('You practice your stand-up routine'), nl,
-        random_between(0,1,SIGN), mag_generator(MAG), change_stats(2, SIGN, MAG), random_event.
+        mag_generator(MAG), change_stats(2, MAG), random_event.
 book :- 
-        write('You read the Art of Wario'), nl,
-        random_between(0,1,SIGN), mag_generator(MAG), change_stats(3, SIGN, MAG), random_event.
+        write('You spend the day in the library, reading'), nl,
+        mag_generator(MAG), change_stats(3, MAG), random_event.
 rest :-
         write('You decide to take a nap'), nl,
-        change_stats(4,_,_), new_day.
+        change_stats(4,_), new_day.
 
 stat :-
         getPlayerStats(F,M,C,I,S,_),
@@ -43,20 +43,15 @@ getPlayerStats(F,M,C,I,S,D) :-
         player_stats(F,M,C,I,S,D).
 
 % sword = 0, book = 1, work = 2, talk = 3, rest = 4
-% sign 0 = neg, sign 1 = pos
-change_stats(ACTION, SIGN, MAG) :-
+change_stats(ACTION, MAG) :-
         getPlayerStats(F,M,C,I,S,D),
         retract(player_stats(F,M,C,I,S,D)),
         (       ACTION =:= 4 -> S1 is S+2
         ;       ACTION =:= 5 -> F1 is F+MAG, M1 is M+MAG, C1 is C+MAG, I1 is I+MAG, S1 is S+MAG % from event inc/dec stats
-        ;       ACTION =:= 0, SIGN =:= 0 -> F1 is F-MAG,S1 is S-1
-        ;       ACTION =:= 0, SIGN =:= 1 -> F1 is F+MAG,S1 is S-1
-        ;       ACTION =:= 1, SIGN =:= 0 -> M1 is M-MAG,S1 is S-1
-        ;       ACTION =:= 1, SIGN =:= 1 -> M1 is M+MAG,S1 is S-1
-        ;       ACTION =:= 2, SIGN =:= 0 -> C1 is C-MAG,S1 is S-1
-        ;       ACTION =:= 2, SIGN =:= 1 -> C1 is C+MAG,S1 is S-1
-        ;       ACTION =:= 3, SIGN =:= 0 -> I1 is I-MAG,S1 is S-1
-        ;       ACTION =:= 3, SIGN =:= 1 -> I1 is I+MAG,S1 is S-1
+        ;       ACTION =:= 0 -> F1 is F+MAG,S1 is S-1
+        ;       ACTION =:= 1 -> M1 is M+MAG,S1 is S-1
+        ;       ACTION =:= 2 -> C1 is C+MAG,S1 is S-1
+        ;       ACTION =:= 3 -> I1 is I+MAG,S1 is S-1
         ),
         (       ACTION =:= 0 -> assert(player_stats(F1,M,C,I,S1,D))
         ;       ACTION =:= 1 -> assert(player_stats(F,M1,C,I,S1,D))
@@ -65,38 +60,39 @@ change_stats(ACTION, SIGN, MAG) :-
         ;       ACTION =:= 4 -> assert(player_stats(F,M,C,I,S1,D))
         ;       ACTION =:= 5 -> assert(player_stats(F1,M1,C1,I1,S1,D))
         ).
-        
+
 
 mag_generator(RES) :-
         random(MAG),
-        (       MAG >= 0, MAG < 0.65 -> RES is 1
-        ;       MAG >= 0.65, MAG < 0.9 -> RES is 2
-        ;       MAG >= 0.9, MAG < 1 -> RES is 4       
+        (       MAG >= 0, MAG < 0.2 -> RES is 0
+        ;       MAG >= 0.2, MAG < 0.75 -> RES is 1
+        ;       MAG >= 0.75, MAG < 0.9 -> RES is 2   
+        ;       MAG >= 0.9, MAG < 1 -> RES is 3    
         ).
 
- 
+
 random_event :-
         random(TRIGGER),
         (       TRIGGER >= 0.99, TRIGGER < 1 -> describe(heart_attack) % event: death
-        ;       TRIGGER >= 0.97, TRIGGER < 0.99 -> describe(inc_all), change_stats(5,1,4), new_day % event: inc all stats
-        ;       TRIGGER >= 0.95, TRIGGER < 0.97 -> describe(dec_all), change_stats(5,0,-2), new_day % event: dec all stats
-        ;       TRIGGER >= 0.9, TRIGGER < 0.95 -> describe(drop_your_wallet), change_stats(1,0,1), new_day % event: drop my wallet
+        ;       TRIGGER >= 0.97, TRIGGER < 0.99 -> describe(inc_all), change_stats(5,4), new_day % event: inc all stats
+        ;       TRIGGER >= 0.95, TRIGGER < 0.97 -> describe(dec_all), change_stats(5,-3), new_day % event: dec all stats
+        ;       TRIGGER >= 0.9, TRIGGER < 0.95 -> describe(drop_your_wallet), change_stats(1,-1), new_day % event: drop my wallet
         ;       TRIGGER >= 0, TRIGGER < 0.9 -> new_day % nothing happens
         ).
-        
+
 new_day :-
         getPlayerStats(F,M,C,I,S,D),
         retract(player_stats(F,M,C,I,S,D)),
         D1 is D+1,
         assert(player_stats(F,M,C,I,S,D1)),
         number_string(D1,Dstr),
-        (       D1 >= 30 -> end_branch
+        (       S =< 0 -> describe(sta_heart_attack)
+        ;       D1 >= 5 -> end_branch
         ;       write('It is now day '), write(Dstr), nl
         ).
-        
 
 end_branch :-
-        getPlayerStats(F,M,C,I,S,_),
+        getPlayerStats(F,M,C,I,_,_),
         (       F >= 30 -> describe(str_end) 
         ;       M >= 30 -> describe(mon_end) 
         ;       C >= 30 -> describe(cha_end)
@@ -126,68 +122,69 @@ instructions :-
     nl.
 
 % Meta
-
-describe(default) :-
-        write('Day'), nl,
-        write('Choose your task for today'), nl.
-
 describe(game_over) :-
-        write('Game Over'), nl,
+        write('Game Over'), nl,nl,
         write('type start. to try again?'), nl.
 
 % List of Random Events
 describe(inc_all) :- 
         nl,
-        write('The here is finally day. The wind is blowing as god descends from the heavens and gives you the gigachad buff. You feel the power coursing through your veins as you take a big ol dump on the floor. You gain a + _ to all your stats'),
+        write('Random event! You suddenly hear a voice from the heavens as God descends from the heavens and gives you a holy blessing. You feel the power coursing through your veins as bask in the glow of the almighty one. He even rains some gold on you as a small bonus. You gain +4 to all your stats'),
         nl.
 
 describe(dec_all) :-
         nl,
-        write('The here is finally day. The wind is blowing as god descends from the heavens and gives you the wee lad debuff. You feel like you want to go back to bed, unmotivated to start the day. You take a -2 to all your stats'),
+        write('Random event! When you woke up today, you felt completely unmotivated to start the day. Instead of visiting the guild to accept another commission, you visit the tavern where you swig 50 beers. You take a -3 to all your stats'),
         nl.
 
 describe(drop_your_wallet) :-
         nl,
-        write('The day is finally here. The wind is blowing as you hear your coin pouch flying away. You manage to recover some of your coins, but it does feel lighter. -1 Money'),
+        write('Random event! As you return home, you trip and drop your coin pouch. The coins scatter along the road. You manage to recover some of your coins, but your pouch feels noticeably lighter. You take -1 to your money'),
         nl.
 
 
 % List of Endings
 describe(str_end) :-
         nl,
-        write('The day is finally here. The wind is blowing as you hear the flap of the dragon’s leathery wings. You use an omega-slash and sunder the dragon in twain. The crowd cheers as you dab over the dragon’s corpse'), nl,
+        write('The day is finally here. The wind is blowing as you hear the flap of the dragon\'s leathery wings. You use an omega-slash and sunder the dragon in twain. The crowd cheers as you dab over the dragon\'s corpse. You saved the village and return a hero!'), nl,
         nl,
         describe(game_over).
 
 describe(int_end) :-
         nl,
-        write(' The day is finally here. The wind is blowing as you hear the flap of the dragon’s leathery wings. 
+        write('The day is finally here. The wind is blowing as you hear the flap of the dragon\'s leathery wings. 
                 You put on your wizard hat and cast an ice beam spell. It hits the dragon straight in the face and it roars in pain. 
-                It breathes fire at you, but you cast a shield spell. The dragon makes fun of you for being a nerd, but you remembered to use ear plugs. 
-                Deterred, the dragon grumbles and flies away.'), nl,
+                It breathes fire at you, but you cast a shield spell.  
+                Deterred, the dragon grumbles and flies away. You managed to scare the dragon away, but for how long?'), nl,
         nl,
         describe(game_over).
 
 describe(cha_end) :-
         nl,
-        write('The day is finally here. The wind is blowing as you hear the flap of the dragon’s leathery wings. You yell at the dragon, “LIGMA”. What’s ligma, the dragon asks, “ligma balls”, The dragon is so distraught and psychologically damaged that it flies away. THE END'), nl,
+        write('The day is finally here. The wind is blowing as you hear the flap of the dragon\'s leathery wings. You yell at the dragon \'GO AWAY DRAGON! YOU DONT BELONG IN THIS VILLAGE\' The dragon, visibly hurt by your proclamation, flies away. You can\'t quite tell if it is going to come back or not, but you have successfully protected the village from the dragon ... I think?'), nl,
         nl,
         describe(game_over).
 
 describe(mon_end) :-
         nl,
-        write('The day is finally here. The wind is blowing as you hear the flap of the dragon’s leathery wings. You determine that the dragon is only here for the gold. You bring up all the gold you earned from part time jobs and offer it to the dragon. It seems satisfied and leaves.'), nl,
+        write('The day is finally here. The wind is blowing as you hear the flap of the dragon\'s leathery wings. You figured that if the dragon is here for the gold, maybe you could bribe it with your earnings from your part time job. You place all your savings on the ground. The dragon takes a look and flies off with it. You may have kept the village safe for now, but what about next month?...'), nl,
         nl,
         describe(game_over).
 
 describe(fail_end) :-
         nl,
-        write('The day is finally here. The wind is blowing as you hear the flap of the dragon’s leathery wings. Everyone gets absolutely destroyed you dumb baby'), nl,
+        write('The day is finally here. The wind is blowing as you hear the flap of the dragon\'s leathery wings. You stand to face the dragon but in your heart of hearts, you know that you cannot defeat it. Whether it was sword fighting or spellcasting, you were pathetic at all of it. You close your eyes and await the inevitable. You are killed by the dragon.'), nl,
         nl,
         describe(game_over).
 
 describe(heart_attack) :-
         nl,
-        write('The day is finally here. The wind is blowing as you hear the beat of your own heart. Until suddenly you don’t You FUCKING DIE DUMBASS WHY DIDNT YOU REST'),
+        write('By the way, did you know your family has a history of cardiac arrest? Well as you lie dying on the floor, you know now. Unfortunately, you die of a heart attack.'),
+        nl,
+        describe(game_over).
+
+describe(sta_heart_attack) :-
+        nl,
+        write('You worked so hard the past few days, you didn\'t even give yourself an opportunity to rest. As you clutch your chest, all you can think is \'You should have rested more!\' You die of a heart attack'),
         nl,
         describe(game_over).
