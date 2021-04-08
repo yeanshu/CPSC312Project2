@@ -11,7 +11,7 @@ Yean Shu, Jason Ueng, Daniel Hou
 player_stats(F,M,C,I,S,D).
 
 % List of possible tasks you can do every day
-% Generates a random increase for their respective stats, then checks for a random event at the end of the day
+% Generates a random increase (MAG) for their respective stats, then checks for a random event at the end of the day
 % If rest is called, then increase stamina and move directly to next day without calling random event      
 sword :- 
         write('You spend the day practicing your swordplay in the field.'), nl,
@@ -47,9 +47,10 @@ stat :-
 getPlayerStats(F,M,C,I,S,D) :- 
         player_stats(F,M,C,I,S,D).
 
-% sword = 0, book = 1, work = 2, talk = 3, rest = 4
-% Depending on the action selected, increase respective stats by MAG and decrease stamina by 1
-% If rest is selected, increase stamina by 2
+% sword = 0, book = 1, work = 2, talk = 3, rest = 4, specialevent = 5
+% Depending on the ACTION selected, increase respective stats by MAG and decrease stamina by 1
+% If ACTION = 4 is selected, increase stamina by 2
+% If ACTION = 5, increase all stats by MAG and do not decrease stamina
 change_stats(ACTION, MAG) :-
         getPlayerStats(F,M,C,I,S,D),
         retract(player_stats(F,M,C,I,S,D)),
@@ -78,7 +79,7 @@ mag_generator(RES) :-
         ).
 
 % Randomly determines if we have a random event
-% If we have a random event, change their repective stats and move to a new day
+% If we have a random event, describe the event, change their repective stats and move to a new day
 % Otherwise move directly to a new day
 random_event :-
         random(TRIGGER),
@@ -136,12 +137,16 @@ instructions :-
     write('Die Dragon! You dont belong in this world!'), nl,
     nl.
 
-% Game over description
+% Game over/Congratulations description
 describe(game_over) :-
         write('Game Over'), nl,nl,
         write('type start. to try again?'), nl.
 
-% Descriptions of random events
+describe(congratulations) :-
+        write('Congratulations!'), nl,nl,
+        write('To start from the beginning and try for a different ending, type start. to try again!'), nl.
+
+% Descriptions of the random events
 describe(inc_all) :- 
         nl,
         write('Random event! You suddenly hear a voice from the heavens as God descends from the heavens and gives you a holy blessing. You feel the power coursing through your veins as bask in the glow of the almighty one. He even rains some gold on you as a small bonus. You gain +4 to all your stats'),
@@ -158,12 +163,13 @@ describe(drop_your_wallet) :-
         nl.
 
 
-% Descriptions of possible endings and the game over text
+% Descriptions of possible endings
+% Each description also calls the game over or congratulations message depending on the ending
 describe(str_end) :-
         nl,
         write('The day is finally here. The wind is blowing as you hear the flap of the dragon\'s leathery wings. You use an omega-slash and sunder the dragon in twain. The crowd cheers as you dab over the dragon\'s corpse. You saved the village and return a hero!'), nl,
         nl,
-        describe(game_over).
+        describe(congratulations).
 
 describe(int_end) :-
         nl,
@@ -172,19 +178,19 @@ describe(int_end) :-
                 It breathes fire at you, but you cast a shield spell.  
                 Deterred, the dragon grumbles and flies away. You managed to scare the dragon away, but for how long?'), nl,
         nl,
-        describe(game_over).
+        describe(congratulations).
 
 describe(cha_end) :-
         nl,
         write('The day is finally here. The wind is blowing as you hear the flap of the dragon\'s leathery wings. You yell at the dragon \'GO AWAY DRAGON! YOU DONT BELONG IN THIS VILLAGE\' The dragon, visibly hurt by your proclamation, flies away. You can\'t quite tell if it is going to come back or not, but you have successfully protected the village from the dragon ... I think?'), nl,
         nl,
-        describe(game_over).
+        describe(congratulations).
 
 describe(mon_end) :-
         nl,
         write('The day is finally here. The wind is blowing as you hear the flap of the dragon\'s leathery wings. You figured that if the dragon is here for the gold, maybe you could bribe it with your earnings from your part time job. You place all your savings on the ground. The dragon takes a look and flies off with it. You may have kept the village safe for now, but what about next month?...'), nl,
         nl,
-        describe(game_over).
+        describe(congratulations).
 
 describe(fail_end) :-
         nl,
@@ -194,7 +200,7 @@ describe(fail_end) :-
 
 describe(heart_attack) :-
         nl,
-        write('By the way, did you know your family has a history of cardiac arrest? Well as you lie dying on the floor, you know now. Unfortunately, you die of a heart attack.'),
+        write('Random event! By the way, did you know your family has a history of cardiac arrest? Well as you lie dying on the floor, you know now. Unfortunately, you die of a heart attack.'),
         nl,
         describe(game_over).
 
